@@ -1,54 +1,40 @@
-name: Generate Release notes
-
-on:
-  workflow_dispatch:
-    inputs:
-      milestoneNumber:
-        description: "Milestone title"
-        required: true
-      generatorVersion:
-        description: "Changelog Generator version"
-        required: true
-
 jobs:
   build:
     name: Generate release notes
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Capture milestone number and generator version
-        run: |
-          echo MILESTONE_NUMBER=${{ github.event.inputs.milestoneNumber }} >> $GITHUB_ENV
-          echo GENERATOR_VERSION=${{ github.event.inputs.generatorVersion }} >> $GITHUB_ENV
+    - continue-on-error: true
+      name: Capture milestone number and generator version
+      run: 'echo MILESTONE_NUMBER=${{ github.event.inputs.milestoneNumber }} >> $GITHUB_ENV
 
-      - name: Download changelog generator
-        run: wget https://github.com/spring-io/github-changelog-generator/releases/download/v$GENERATOR_VERSION/github-changelog-generator.jar
+        echo GENERATOR_VERSION=${{ github.event.inputs.generatorVersion }} >> $GITHUB_ENV
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Prepare configuration file
-        run: |
-          cat << EOF > application.yml
-          changelog:
-            repository: spring-projects/spring-batch
-            sections:
-              - title: ":star: New features"
-                labels: [ "type: feature" ]
-              - title: ":rocket: Enhancements"
-                labels: [ "type: enhancement" ]
-              - title: ":lady_beetle: Bug fixes"
-                labels: [ "type: bug" ]
-              - title: ":notebook_with_decorative_cover: Documentation"
-                labels: [ "in: documentation" ]
-              - title: ":hammer: Tasks"
-                labels: [ "type: task" ]
-          EOF
-
-      - name: Generate release notes
-        run: java -jar github-changelog-generator.jar $MILESTONE_NUMBER release-notes.md
-
-      - name: Print release notes
-        run: cat release-notes.md
+        '
+    - continue-on-error: true
+      name: Download changelog generator
+      run: wget https://github.com/spring-io/github-changelog-generator/releases/download/v$GENERATOR_VERSION/github-changelog-generator.jar
+    - continue-on-error: true
+      name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: '17'
+    - continue-on-error: true
+      name: Prepare configuration file
+      run: "cat << EOF > application.yml\nchangelog:\n  repository: spring-projects/spring-batch\n\
+        \  sections:\n    - title: \":star: New features\"\n      labels: [ \"type:\
+        \ feature\" ]\n    - title: \":rocket: Enhancements\"\n      labels: [ \"\
+        type: enhancement\" ]\n    - title: \":lady_beetle: Bug fixes\"\n      labels:\
+        \ [ \"type: bug\" ]\n    - title: \":notebook_with_decorative_cover: Documentation\"\
+        \n      labels: [ \"in: documentation\" ]\n    - title: \":hammer: Tasks\"\
+        \n      labels: [ \"type: task\" ]\nEOF\n"
+    - continue-on-error: true
+      name: Generate release notes
+      run: java -jar github-changelog-generator.jar $MILESTONE_NUMBER release-notes.md
+    - continue-on-error: true
+      name: Print release notes
+      run: cat release-notes.md
+name: Generate Release notes
+on:
+  repository_dispatch:
+    types: trigger-ga___release-notes-generation.yml
